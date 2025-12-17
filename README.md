@@ -11,8 +11,10 @@
 
 This repository contains two Bash scripts for **cloning all repositories** from a GitHub user or GitHub Enterprise user.
 
-- clone_all_repos.sh – Clones all **public repositories** from a standard GitHub user.  
-- clone_all_repos_ghe.sh – Clones all **public and private repositories** from a GitHub Enterprise user using a personal access token.  
+- Clone specific repositories by **prefix**  
+- Clone only repositories in a specific **programming language**  
+- Supports both **public** and **private repos** (with token)  
+- Works with GitHub and can be adapted for GitHub Enterprise
 
 Both scripts handle **pagination** and skip repositories that are already cloned.
 
@@ -33,6 +35,15 @@ Both scripts handle **pagination** and skip repositories that are already cloned
 - jq installed (for parsing JSON)  
 - Optional: GitHub personal access token (required for private repositories or Enterprise)  
 
+
+## Features
+
+- Clone **all repos** from a user  
+- Filter repos by **name prefix**  
+- Filter repos by **primary language** (Java, C#, etc.)  
+- Skip **already cloned repos**  
+- Supports **pagination** for users with 100+ repos  
+- Works with **GitHub Enterprise** (requires token)  
 
 ## Usage
 
@@ -66,13 +77,61 @@ This will:
 - Clone all repositories (public and private) for the specified user.
 - Skip already cloned repositories.
 
+### Clone Filtered repos
+
+Clone repos starting with project
+
+```bash
+./clone_filtered_repos.sh torvalds project- ""
+```
+
+Clone only Java repos:
+
+```bash
+./clone_filtered_repos.sh torvalds "" Java
+```
+
+
+Clone only .NET/C# repos:
+
+```bash
+./clone_filtered_repos.sh torvalds "" "C#"
+
+```
+
+Clone private Java repos from GitHub Enterprise:
+
+```bash
+./clone_filtered_repos.sh johndoe "" Java ghp_xxxxx
+```
+
+### Notes
+
+- Prefix and language filters can be combined.
+- For GitHub Enterprise, set API_URL="https://<your-ghe>/api/v3/users/$USERNAME/repos".
+- kips repos that already exist in the target folder.
+- Language filtering uses GitHub API's primary language field.
+
 ## Diagram:
 
 ```mermaid
 flowchart TD
-    A[Start] --> B[Fetch GitHub Repos]
-    B --> C{Public or Private?}
-    C -->|Public| D[Clone directly]
-    C -->|Private| E[Use token to authenticate]
-    D --> F[Done]
+    A[Start Script] --> B[Check Username]
+    B --> C[Check Filters]
+    C --> D{Prefix Filter?}
+    D -->|Yes| E[Skip repos not matching prefix]
+    D -->|No| F[Continue]
     E --> F
+    F --> G{Language Filter?}
+    G -->|Yes| H[Skip repos not matching language]
+    G -->|No| I[Continue]
+    H --> I
+    I --> J{Already Cloned?}
+    J -->|Yes| K[Skip repo]
+    J -->|No| L[Clone repo via git]
+    K --> M[Next repo]
+    L --> M
+    M --> N[Next page of repos?]
+    N -->|Yes| B
+    N -->|No| O[End]
+
