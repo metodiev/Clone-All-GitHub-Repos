@@ -65,3 +65,14 @@ This will:
 - Connect to your GitHub Enterprise server via the API.
 - Clone all repositories (public and private) for the specified user.
 - Skip already cloned repositories.
+
+## Diagram:
+
+```mermaid
+flowchart TD
+    A[Start] --> B[Fetch GitHub Repos]
+    B --> C{Public or Private?}
+    C -->|Public| D[Clone directly]
+    C -->|Private| E[Use token to authenticate]
+    D --> F[Done]
+    E --> F
